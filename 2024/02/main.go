@@ -16,6 +16,15 @@ func getFilePath() string {
 
 	return *inputFile
 }
+
+func isDampenerMode() bool {
+	dampenerMode := flag.Bool("dampener", false, "Dampener mode")
+
+	flag.Parse()
+
+	return *dampenerMode
+}
+
 func getFileContent(filePath string) ([][]int) {
 	var content [][]int
 
@@ -96,23 +105,45 @@ func isSafe(line []int) bool {
 	return (increasing || decreasing) && diff
 }
 
-func countSafeReport(content [][]int) int {
+func isSafeDampener(line []int) bool {
+	// For each value in the line
+	// Try to remove it and check if the line is still safe without it
+	for i := 0; i < len(line); i++ {
+		var newLine []int
+		newLine = append(newLine, line[:i]...)
+		newLine = append(newLine, line[i+1:]...)
+
+		if isSafe(newLine) {
+			return true
+		}
+	}
+	return false
+}
+
+func countSafeReport(content [][]int, dampenerMode bool) int {
 	var safeReport int
 	for _, line := range content {
-		if isSafe(line) {
-			safeReport++
+		if dampenerMode {
+			if (isSafeDampener(line)) {
+				safeReport++
+			}
+		} else {
+			if isSafe(line) {
+				safeReport++
+			}
 		}
 	}
 	return safeReport
 }
 
 func main() {
+	dampenerMode := isDampenerMode()
 	inputFilePath := getFilePath()
 
 	// Get the content of the file
 	content := getFileContent(inputFilePath)
 
-	safeReport := countSafeReport(content)
+	safeReport := countSafeReport(content, dampenerMode)
 
 	fmt.Print("Safe report: ", safeReport)
 }
